@@ -1,0 +1,117 @@
+---
+title: "Correlation Coefficient"
+author: "Claire Miller"
+date: "11/07/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+# Libraries
+library(malariaAtlas)
+library(raster)
+library(ggspatial)
+
+# Files
+hum_filename <- "ProjectHum/Monthly Outputs/AggScale.grd"
+temp_filename <- "ProjectTemp/Monthly Outputs/AggScale.grd"
+rain_filename <- "ProjectSurface/Monthly Outputs/Agg.grd"
+# Layers
+mal_rate_layer <- "Plasmodium falciparum PR2 - 10 version 2020"
+# Use the africa layer to get the domain
+layer_africa_2015 <- "Plasmodium falciparum PR2-10"
+
+## Switch to just Africa but latest data
+
+# Data processing functions
+processEnvRaster <- function(raster_filename,label,extentRaster=mal_rate) {
+  x <- raster(raster_filename)
+  y <- crop(x, extent(extentRaster))
+  names(y) = label
+  return(y)
+}
+getRasterCorrelation <- function(x1,x2=mal_rate,conv_na=T) {
+  x <- stack(x1,x2)
+  x.df <- as.data.frame(x,xy=T)
+  # Want to assign 0 to any NA malaria values that are on land
+  if (conv_na) {
+    x2.na <- which(is.na(x.df[,names(x2)]) & !is.na(x.df[,names(x1)]))
+    x.df[x2.na,names(x2)] = 0
+  }
+  cor(x.df[,names(x1)],x.df[,names(x2)],
+      method = "spearman", use="complete.obs")
+}
+```
+
+Want to determine a correlation coefficient between a determined suitability index and the estimated malaria prevalence from the marlia Atlas.
+Have three indices: humidity (`ProjectHum`), temperature (`ProjectTemp`), and rainfall (`ProjectSurface`).
+Maps are available for the monthly data, but we only use the yearly aggreagated data (`AggScale.grd`) for each variable.
+Any pixel that has no data (i.e. NA) on the malaria incidence raster, but does have data on the indices raster, is assumed to have a malaria incidence of 0. 
+
+# Malaria data
+
+Malaria data is downloaded from the Malaria Atlas project.
+We use the layer: ``r mal_rate_layer`` with the bounding box for Africa taken from ``r layer_africa_2015``.
+We only focus on Africa as my latop can't deal with the whole globe scale.
+
+```{r mal-atlas, fig.width = 10, include=F}
+africa_rate_2015 <- getRaster(surface=layer_africa_2015)
+mal_rate <- getRaster(surface=mal_rate_layer, extent = bbox(africa_rate_2015))
+#mal_rate.df <- as.MAPraster(mal_rate)
+ggplot() + layer_spatial(mal_rate) +
+  labs(fill=mal_rate_layer)
+```
+
+
+# Humidity
+
+Starting with humidity.
+We are using ``r hum_filename``.
+We firstly crop the extent to match that of the malaria data.
+
+```{r humidity-data}
+hum <- processEnvRaster(hum_filename,"Humidity")
+ggplot() + layer_spatial(hum) + labs(fill="Humidity")
+```
+
+Then we can correlate the humidity and the Malaria rate.
+We just get the value at each pixel for both and run the base `cor` method.
+
+```{r hum-cor}
+cat("Spearman correlation between humidity and malaria rate: ",getRasterCorrelation(hum),"\n")
+```
+
+# Temperature
+
+We are using ``r temp_filename``.
+We firstly crop the extent to match that of the malaria data.
+
+```{r temperature-data}
+temp <- processEnvRaster(temp_filename,"Temperature")
+ggplot() + layer_spatial(temp) + labs(fill="Temperature")
+```
+
+Then we can correlate the humidity and the Malaria rate.
+We just get the value at each pixel for both and run the base `cor` method.
+
+```{r temp-cor}
+cat("Spearman correlation between temperature and malaria rate: ",getRasterCorrelation(temp),"\n")
+```
+
+
+# Rainfall
+
+We are using ``r rain_filename``.
+We firstly crop the extent to match that of the malaria data.
+
+```{r rainfall-data}
+rain <- processEnvRaster(rain_filename,"Rainfall")
+ggplot() + layer_spatial(rain) + labs(fill="Rainfall")
+```
+
+Then we can correlate the humidity and the Malaria rate.
+We just get the value at each pixel for both and run the base `cor` method.
+
+```{r rain-cor}
+cat("Spearman correlation between rainfall and malaria rate: ",getRasterCorrelation(rain),"\n")
+```
