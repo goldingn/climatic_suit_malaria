@@ -3,3 +3,8 @@
 .Rdata
 .httr-oauth
 .DS_Store
+
+# compiled files
+tempsuitcalc/src/*.o
+tempsuitcalc/src/*.so
+

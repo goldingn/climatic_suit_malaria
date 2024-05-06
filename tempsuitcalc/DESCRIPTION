@@ -1,0 +1,13 @@
+Package: tempsuitcalc
+Type: Package
+Title: Simulates mosquito cohorts and calculates vec capacity
+Version: 0.1
+Date: 2013-09-10
+Authors@R: c(
+    person("Oliver", "Brady", , , role = "aut"),
+    person("Owen", "Brown", , "owenb696@gmail.com", role = c("aut", "cre"))
+ )
+Description: Simulates mosquito cohorts and calculates vec capacity
+License: GPL(>=2)
+Depends: Rcpp (>= 0.10.4)
+LinkingTo: Rcpp
