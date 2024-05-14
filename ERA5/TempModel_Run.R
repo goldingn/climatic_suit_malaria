@@ -33,7 +33,7 @@ project<-function(i){
   extractFromGrib = function(fileName) {
     return(brick(fileName)[valid_cells])
   }
-  temp_matrix = do.call(cbind, lapply(file_names, extractFromGrib))[1:5208]
+  temp_matrix = do.call(cbind, lapply(file_names, extractFromGrib))[,1:5208]
   
   # Save the output, so if the model needs to be re-run extraction doesn't need to be repeated
   save(valid_cells,
