@@ -8,6 +8,7 @@ project<-function(i){
   
   # Define the model
   riskf <- function(tempraw) {
+    outputweeks = (36 * 12) + seq(1, 4380, 12)
     # Convert Kelvin data to Celsius
     temp <- tempraw - 273.15
     
