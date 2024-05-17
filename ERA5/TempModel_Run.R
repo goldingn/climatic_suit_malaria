@@ -30,8 +30,16 @@ project<-function(i){
   number_of_cells = length(valid_cells)
 
   # Extract temperatures from the data files
+  # Running this direct without a for loop seems to cause memory issues
   extractFromGrib = function(fileName) {
-    return(brick(fileName)[valid_cells])
+    temp_brick = brick(fileName)
+    number_of_layers = nlayers(temp_brick)
+    return_matrix = matrix(0, number_of_cells, number_of_layers)
+    for (layer in 1:number_of_layers) {
+      print(paste(fileName, toString(layer), sep=" "))
+      return_matrix[,layer] = temp_brick[[layer]][valid_cells]
+    }
+    return(return_matrix)
   }
   temp_matrix = do.call(cbind, lapply(file_names, extractFromGrib))[,1:5208]
   

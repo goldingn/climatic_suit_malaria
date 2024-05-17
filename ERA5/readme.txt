@@ -6,5 +6,6 @@ Running with the expanded dataset will be a challenge - R cannot handle all 5000
 Files:
 * TempModel.slurm - this should run all 25 chunks of the model
 * TempModel_Run.R - this file contains the model as well as the data extraction logic
+* TempModel_Run_Fast.R - this file just contains the model, assumes data has been extracted and saved already
 * TempModel_Initial.R - this file generates the necessary ValidCells.RData file, can be safely ignored assuming this RData file is present and up to date
 * ValidCells.RData - the temp model will attempt to load this file as part of its run
