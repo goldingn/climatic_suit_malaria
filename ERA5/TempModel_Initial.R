@@ -15,7 +15,34 @@ blank <- temp_stack[[1]]
 blank[valid_cells] <- 0
 writeRaster(blank, filename="blankNew.grd",overwrite=TRUE)
 
-# TODO: Do we want to do further filtering to cells which never get a high temperature?
+# We run a degree day accumulation across the summer months
+degree_day_accumulation = function() {
+  file_names <- c("TempData/2m_temp_2022_06.grib",
+                  "TempData/2m_temp_2022_07.grib",
+                  "TempData/2m_temp_2022_08.grib",
+                  "TempData/2m_temp_2022_12.grib",
+                  "TempData/2m_temp_2023_01.grib",
+                  "TempData/2m_temp_2023_02.grib")
+  current_layer = 1
+  in_place_accumulation = numeric(length(valid_cells))
+  for(fileName in file_names) {
+    temp_brick = brick(fileName)
+    number_of_layers = nlayers(temp_brick)
+    for (layer in 1:number_of_layers) {
+      brick_layer = pmax((temp_brick[[layer]][valid_cells] - 289.15) / 12, 0)
+      in_place_accumulation = in_place_accumulation + brick_layer
+      print(paste(fileName, toString(layer), "Current Layer", current_layer, sep=" "))
+      current_layer = current_layer + 1
+    }
+  }
+  return(in_place_accumulation)
+}
+accumulation = degree_day_accumulation()
+# Cells need 111 degree days to have a chance at producing a viable population
+# Since this accumulation covers half the runtime of the model, we consider only cells with 55 or more degree days
+# These cells will be excluded from the model to reduce its running time
+accumulated_indices = which(accumulation >= 55)
+valid_cells = valid_cells[accumulated_indices]
 
 # Split valid cells into chunks for running
 number_of_chunks = 25
