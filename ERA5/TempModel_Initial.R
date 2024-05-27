@@ -3,7 +3,7 @@ library(sp)
 library(raster)
 
 # Load a single layer as an example
-temp_stack <- stack("TempData/2m_temp_2022_03.grib")
+temp_stack <- stack("AllData/2022_03.grib")
 sample_layer <- temp_stack[[1]]
 
 # Calculate which coordinates are not NA 
@@ -17,18 +17,19 @@ writeRaster(blank, filename="blankNew.grd",overwrite=TRUE)
 
 # We run a degree day accumulation across the summer months
 degree_day_accumulation = function() {
-  file_names <- c("TempData/2m_temp_2022_06.grib",
-                  "TempData/2m_temp_2022_07.grib",
-                  "TempData/2m_temp_2022_08.grib",
-                  "TempData/2m_temp_2022_12.grib",
-                  "TempData/2m_temp_2023_01.grib",
-                  "TempData/2m_temp_2023_02.grib")
+  file_names <- c("AllData/2022_06.grib",
+                  "AllData/2022_07.grib",
+                  "AllData/2022_08.grib",
+                  "AllData/2022_12.grib",
+                  "AllData/2023_01.grib",
+                  "AllData/2023_02.grib")
   current_layer = 1
   in_place_accumulation = numeric(length(valid_cells))
   for(fileName in file_names) {
     temp_brick = brick(fileName)
     number_of_layers = nlayers(temp_brick)
-    for (layer in 1:number_of_layers) {
+    layers = seq(2, number_of_layers - 2, 4)
+    for (layer in layers) {
       brick_layer = pmax((temp_brick[[layer]][valid_cells] - 289.15) / 12, 0)
       in_place_accumulation = in_place_accumulation + brick_layer
       print(paste(fileName, toString(layer), "Current Layer", current_layer, sep=" "))

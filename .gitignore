@@ -8,3 +8,6 @@
 tempsuitcalc/src/*.o
 tempsuitcalc/src/*.so
 
+# ERA5 data files
+ERA5/*Data/*
+

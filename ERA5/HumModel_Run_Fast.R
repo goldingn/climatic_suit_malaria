@@ -4,13 +4,25 @@ project<-function(i){
   library(tempsuitcalc)
   
   # Load existing in progress files
-  load(paste("TempMatrix",i,".RData",sep=""))
+  load(paste("TempDewpointMatrix",i,".RData",sep=""))
+  
+  # Define functions for calculating relative humidity
+  mag_coeff_exp = function(temp) {
+    return(exp((17.625 * temp) / (243.04 + temp)))
+  }
+  
+  calc_hum = function(temp, dewpoint) {
+    return(100 * (mag_coeff_exp(dewpoint) / mag_coeff_exp(temp)))
+  }
   
   # Define the model
-  riskf <- function(tempraw) {
+  riskf <- function(tempdewraw) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
     # Convert Kelvin data to Celsius
-    temp <- tempraw - 273.15
+    temp <- tempdewraw[1:5208] - 273.15
+    dewpoint = tempdewraw[5209:10416] - 273.15
+    # Convert dewpoint data to relative humidity
+    hum <- mapply(calc_hum, temp, dewpoint)
     
     # must used fixed lengths, as specific in Oli's code. He specifies them in hours
     # and then divides by 2:
@@ -28,8 +40,11 @@ project<-function(i){
     ovi <- dd
     
     # per-bin survival probabilities
+    
+    humsurv <- pmax(pmin(((hum-5)/37),1),0)
+    
     surv <-
-      exp(-1 / pmax((-52.8 + 15.72 * temp - 0.36 * temp ^ 2), 0))
+      exp(-1 / pmax((-52.8 + 15.72 * temp - 0.36 * temp ^ 2), 0))*(humsurv^(1/12))
     
     # replicate for all bin-ages (I.e. assume age has no effect on mortality)
     P <- t(replicate(396, surv))
@@ -45,10 +60,10 @@ project<-function(i){
   }
   
   # Apply the model to temp data
-  output <- apply(temp_matrix, 1, riskf)
+  output <- apply(temp_dewpoint_matrix, 1, riskf)
   
   # Save the output
-  nam<-paste("TempOutput",i,sep="")
+  nam<-paste("HumOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
   save(list=nam,
