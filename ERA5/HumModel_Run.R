@@ -33,12 +33,11 @@ project<-function(i){
   # Running this direct without a for loop seems to cause memory issues
   extractDewpointFromGrib = function(fileName) {
     temp_brick = brick(fileName)
-    number_of_layers = nlayers(temp_brick)
+    number_of_layers = nlayers(temp_brick) / 4
     return_matrix = matrix(0, number_of_cells, number_of_layers)
-    layers = seq(1, number_of_layers - 3, 4)
-    for (layer in layers) {
+    for (layer in 1:number_of_layers) {
       print(paste(fileName, toString(layer), sep=" "))
-      return_matrix[,layer] = temp_brick[[layer]][valid_cells]
+      return_matrix[,layer] = temp_brick[[4 * layer - 3]][valid_cells]
     }
     return(return_matrix)
   }
