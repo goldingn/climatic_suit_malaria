@@ -81,7 +81,7 @@ project<-function(i){
     
     # Convert m data to mm
     prec = fullraw[10417:15624] * 1000
-    evap = fullraw[15625:20832] * 1000
+    evap = fullraw[15625:20832] * -1000
     
     # Calculate a volume of water curve
     Vout = 0*temp
