@@ -16,11 +16,10 @@ project<-function(i){
   }
   
   # Define the model
-  riskf <- function(tempdewraw) {
+  riskf <- function(tempdew) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- tempdewraw[1:5208] - 273.15
-    dewpoint = tempdewraw[5209:10416] - 273.15
+    temp <- tempdew[1:5208]
+    dewpoint = tempdew[5209:10416]
     # Convert dewpoint data to relative humidity
     hum <- mapply(calc_hum, temp, dewpoint)
     
@@ -66,6 +65,5 @@ project<-function(i){
   nam<-paste("HumOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
-  save(list=nam,
-       file=filename)
+  save(list=nam, file=filename)
 }

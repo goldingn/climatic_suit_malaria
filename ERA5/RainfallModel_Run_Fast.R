@@ -18,17 +18,15 @@ project<-function(i){
   }
   
   # Define the model
-  riskf <- function(fullraw) {
+  riskf <- function(full) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- fullraw[1:5208] - 273.15
-    dewpoint = fullraw[5209:10416] - 273.15
+    temp <- full[1:5208]
+    dewpoint = full[5209:10416]
+    prec = full[10417:15624]
+    evap = full[15625:20832]
+    
     # Convert dewpoint data to relative humidity
     hum <- mapply(calc_hum, temp, dewpoint)
-    
-    # Convert m data to mm
-    prec = fullraw[10417:15624] * 1000
-    evap = fullraw[15625:20832] * 1000
     
     # Calculate a volume of water curve
     Vout = 0*temp

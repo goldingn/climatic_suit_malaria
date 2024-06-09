@@ -35,9 +35,17 @@ project<-function(i){
     temp_brick = brick(fileName)
     number_of_layers = nlayers(temp_brick) / 4
     return_matrix = matrix(0, number_of_cells, number_of_layers)
+    previousLayer = rep(0, number_of_cells)
+    # Convert m data to mm, and factor for data being cumulative per day
     for (layer in 1:number_of_layers) {
       print(paste(fileName, toString(layer), sep=" "))
-      return_matrix[,layer] = temp_brick[[4 * layer]][valid_cells]
+      newLayer = temp_brick[[4 * layer]][valid_cells] * 1000
+      if (layer %% 12 == 2) {
+        return_matrix[,layer] = newLayer
+      } else {
+        return_matrix[,layer] = newLayer - previousLayer
+      }
+      previousLayer = newLayer
     }
     return(return_matrix)
   }
@@ -47,9 +55,17 @@ project<-function(i){
     temp_brick = brick(fileName)
     number_of_layers = nlayers(temp_brick) / 4
     return_matrix = matrix(0, number_of_cells, number_of_layers)
+    previousLayer = rep(0, number_of_cells)
+    # Convert m data to mm, and factor for data being cumulative per day and negative
     for (layer in 1:number_of_layers) {
       print(paste(fileName, toString(layer), sep=" "))
-      return_matrix[,layer] = temp_brick[[4 * layer - 1]][valid_cells]
+      newLayer = temp_brick[[4 * layer - 1]][valid_cells] * -1000
+      if (layer %% 12 == 2) {
+        return_matrix[,layer] = newLayer
+      } else {
+        return_matrix[,layer] = newLayer - previousLayer
+      }
+      previousLayer = newLayer
     }
     return(return_matrix)
   }
@@ -71,17 +87,15 @@ project<-function(i){
   }
   
   # Define the model
-  riskf <- function(fullraw) {
+  riskf <- function(full) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- fullraw[1:5208] - 273.15
-    dewpoint = fullraw[5209:10416] - 273.15
+    temp <- full[1:5208]
+    dewpoint = full[5209:10416]
+    prec = full[10417:15624]
+    evap = full[15625:20832]
+    
     # Convert dewpoint data to relative humidity
     hum <- mapply(calc_hum, temp, dewpoint)
-    
-    # Convert m data to mm
-    prec = fullraw[10417:15624] * 1000
-    evap = fullraw[15625:20832] * -1000
     
     # Calculate a volume of water curve
     Vout = 0*temp
@@ -129,6 +143,5 @@ project<-function(i){
   nam<-paste("HumOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
-  save(list=nam,
-       file=filename)
+  save(list=nam, file=filename)
 }

@@ -7,10 +7,8 @@ project<-function(i){
   load(paste("TempMatrix",i,".RData",sep=""))
   
   # Define the model
-  riskf <- function(tempraw) {
+  riskf <- function(temp) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- tempraw - 273.15
     
     # must used fixed lengths, as specific in Oli's code. He specifies them in hours
     # and then divides by 2:
@@ -51,6 +49,5 @@ project<-function(i){
   nam<-paste("TempOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
-  save(list=nam,
-       file=filename)
+  save(list=nam, file=filename)
 }

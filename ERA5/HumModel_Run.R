@@ -37,7 +37,8 @@ project<-function(i){
     return_matrix = matrix(0, number_of_cells, number_of_layers)
     for (layer in 1:number_of_layers) {
       print(paste(fileName, toString(layer), sep=" "))
-      return_matrix[,layer] = temp_brick[[4 * layer - 3]][valid_cells]
+      # Convert Kelvin data to Celsius
+      return_matrix[,layer] = temp_brick[[4 * layer - 3]][valid_cells] - 273.15
     }
     return(return_matrix)
   }
@@ -59,11 +60,10 @@ project<-function(i){
   }
   
   # Define the model
-  riskf <- function(tempdewraw) {
+  riskf <- function(tempdew) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- tempdewraw[1:5208] - 273.15
-    dewpoint = tempdewraw[5209:10416] - 273.15
+    temp <- tempdew[1:5208]
+    dewpoint = tempdew[5209:10416]
     # Convert dewpoint data to relative humidity
     hum <- mapply(calc_hum, temp, dewpoint)
     
@@ -109,6 +109,5 @@ project<-function(i){
   nam<-paste("HumOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
-  save(list=nam,
-       file=filename)
+  save(list=nam, file=filename)
 }

@@ -37,7 +37,8 @@ project<-function(i){
     return_matrix = matrix(0, number_of_cells, number_of_layers)
     for (layer in 1:number_of_layers) {
       print(paste(fileName, toString(layer), sep=" "))
-      return_matrix[,layer] = temp_brick[[4 * layer - 2]][valid_cells]
+      # Convert Kelvin data to Celsius
+      return_matrix[,layer] = temp_brick[[4 * layer - 2]][valid_cells] - 273.15
     }
     return(return_matrix)
   }
@@ -49,11 +50,9 @@ project<-function(i){
        file = paste("TempMatrix",i,".RData",sep=""))
   
   # Define the model
-  riskf <- function(tempraw) {
+  riskf <- function(temp) {
     outputweeks = (36 * 12) + seq(1, 4380, 12)
-    # Convert Kelvin data to Celsius
-    temp <- tempraw - 273.15
-    
+
     # must used fixed lengths, as specific in Oli's code. He specifies them in hours
     # and then divides by 2:
     # simulation length = 434 days: 36d burn-in, 365d simulation, 33d post-simulation survival
@@ -93,6 +92,5 @@ project<-function(i){
   nam<-paste("TempOutput",i,sep="")
   assign(x=nam,value=output)
   filename<-paste(nam,".RData",sep="")
-  save(list=nam,
-       file=filename)
+  save(list=nam, file=filename)
 }
