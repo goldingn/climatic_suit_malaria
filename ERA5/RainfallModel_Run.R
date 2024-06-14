@@ -1,81 +1,89 @@
 project<-function(i){
   # Load libraries
-  library(sp)
-  library(raster)
   library(Rcpp)
   library(tempsuitcalc)
   
-  # Load existing in progress files
-  load(paste("TempDewpointMatrix",i,".RData",sep=""))
+  dataMatrixName = paste("FullMatrix",i,".RData",sep="")
   
-  file_names <- c("AllData/2022_03.grib",
-                  "AllData/2022_04.grib",
-                  "AllData/2022_05.grib",
-                  "AllData/2022_06.grib",
-                  "AllData/2022_07.grib",
-                  "AllData/2022_08.grib",
-                  "AllData/2022_09.grib",
-                  "AllData/2022_10.grib",
-                  "AllData/2022_11.grib",
-                  "AllData/2022_12.grib",
-                  "AllData/2023_01.grib",
-                  "AllData/2023_02.grib",
-                  "AllData/2023_03.grib",
-                  "AllData/2023_04.grib",
-                  "AllData/2023_05.grib")
+  if (file.exists(dataMatrixName)) {
+    # Load existing in progress files
+    load(dataMatrixName)
+  } else {
+    library(sp)
+    library(raster)
+    
+    # Load existing in progress files
+    load(paste("TempDewpointMatrix",i,".RData",sep=""))
+    
+    file_names <- c("AllData/2022_03.grib",
+                    "AllData/2022_04.grib",
+                    "AllData/2022_05.grib",
+                    "AllData/2022_06.grib",
+                    "AllData/2022_07.grib",
+                    "AllData/2022_08.grib",
+                    "AllData/2022_09.grib",
+                    "AllData/2022_10.grib",
+                    "AllData/2022_11.grib",
+                    "AllData/2022_12.grib",
+                    "AllData/2023_01.grib",
+                    "AllData/2023_02.grib",
+                    "AllData/2023_03.grib",
+                    "AllData/2023_04.grib",
+                    "AllData/2023_05.grib")
+    
+    # Extract the cells of this particular chunk
+    valid_cells = na.omit(valid_cells_matrix[i,])
+    rm(valid_cells_matrix)
+    number_of_cells = length(valid_cells)
   
-  # Extract the cells of this particular chunk
-  valid_cells = na.omit(valid_cells_matrix[i,])
-  rm(valid_cells_matrix)
-  number_of_cells = length(valid_cells)
-
-  # Extract temperatures from the data files
-  # Running this direct without a for loop seems to cause memory issues
-  extractPrecFromGrib = function(fileName) {
-    temp_brick = brick(fileName)
-    number_of_layers = nlayers(temp_brick) / 4
-    return_matrix = matrix(0, number_of_cells, number_of_layers)
-    previousLayer = rep(0, number_of_cells)
-    # Convert m data to mm, and factor for data being cumulative per day
-    for (layer in 1:number_of_layers) {
-      print(paste(fileName, toString(layer), sep=" "))
-      newLayer = temp_brick[[4 * layer]][valid_cells] * 1000
-      if (layer %% 12 == 2) {
-        return_matrix[,layer] = newLayer
-      } else {
-        return_matrix[,layer] = newLayer - previousLayer
+    # Extract temperatures from the data files
+    # Running this direct without a for loop seems to cause memory issues
+    extractPrecFromGrib = function(fileName) {
+      temp_brick = brick(fileName)
+      number_of_layers = nlayers(temp_brick) / 4
+      return_matrix = matrix(0, number_of_cells, number_of_layers)
+      previousLayer = rep(0, number_of_cells)
+      # Convert m data to mm, and factor for data being cumulative per day
+      for (layer in 1:number_of_layers) {
+        print(paste(fileName, toString(layer), sep=" "))
+        newLayer = temp_brick[[4 * layer]][valid_cells] * 1000
+        if (layer %% 12 == 2) {
+          return_matrix[,layer] = newLayer
+        } else {
+          return_matrix[,layer] = newLayer - previousLayer
+        }
+        previousLayer = newLayer
       }
-      previousLayer = newLayer
+      return(return_matrix)
     }
-    return(return_matrix)
-  }
-  prec_matrix = do.call(cbind, lapply(file_names, extractPrecFromGrib))[,1:5208]
-  
-  extractEvapFromGrib = function(fileName) {
-    temp_brick = brick(fileName)
-    number_of_layers = nlayers(temp_brick) / 4
-    return_matrix = matrix(0, number_of_cells, number_of_layers)
-    previousLayer = rep(0, number_of_cells)
-    # Convert m data to mm, and factor for data being cumulative per day and negative
-    for (layer in 1:number_of_layers) {
-      print(paste(fileName, toString(layer), sep=" "))
-      newLayer = temp_brick[[4 * layer - 1]][valid_cells] * -1000
-      if (layer %% 12 == 2) {
-        return_matrix[,layer] = newLayer
-      } else {
-        return_matrix[,layer] = newLayer - previousLayer
+    prec_matrix = do.call(cbind, lapply(file_names, extractPrecFromGrib))[,1:5208]
+    
+    extractEvapFromGrib = function(fileName) {
+      temp_brick = brick(fileName)
+      number_of_layers = nlayers(temp_brick) / 4
+      return_matrix = matrix(0, number_of_cells, number_of_layers)
+      previousLayer = rep(0, number_of_cells)
+      # Convert m data to mm, and factor for data being cumulative per day and negative
+      for (layer in 1:number_of_layers) {
+        print(paste(fileName, toString(layer), sep=" "))
+        newLayer = temp_brick[[4 * layer - 1]][valid_cells] * -1000
+        if (layer %% 12 == 2) {
+          return_matrix[,layer] = newLayer
+        } else {
+          return_matrix[,layer] = newLayer - previousLayer
+        }
+        previousLayer = newLayer
       }
-      previousLayer = newLayer
+      return(return_matrix)
     }
-    return(return_matrix)
+    evap_matrix = do.call(cbind, lapply(file_names, extractEvapFromGrib))[,1:5208]
+    full_matrix = cbind(temp_dewpoint_matrix, prec_matrix, evap_matrix)
+    
+    # Save the output, so if the model needs to be re-run extraction doesn't need to be repeated
+    save(valid_cells,
+         full_matrix,
+         file = dataMatrixName)
   }
-  evap_matrix = do.call(cbind, lapply(file_names, extractEvapFromGrib))[,1:5208]
-  full_matrix = cbind(temp_dewpoint_matrix, prec_matrix, evap_matrix)
-  
-  # Save the output, so if the model needs to be re-run extraction doesn't need to be repeated
-  save(valid_cells,
-       full_matrix,
-       file = paste("FullMatrix",i,".RData",sep=""))
   
   # Define functions for calculating relative humidity
   mag_coeff_exp = function(temp) {

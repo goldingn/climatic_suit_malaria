@@ -5,15 +5,12 @@ Running with the expanded dataset will be a challenge - R cannot handle all 5000
 
 * TempModel.slurm - this should run all 25 chunks of the Temperature model
 * TempModel_Run.R - this extracts data to a file TempMatrixN.RData (where N is the chunk run), and runs the model
-* TempModel_Run_Fast.R - this file just contains the model, requires the file TempMatrixN.RData to be loaded
 * TempModel_Initial.R - this file generates the necessary ValidCells.RData file, can be safely ignored assuming this RData file is present and up to date
 * ValidCells.RData - the temp model will attempt to load this file as part of its run
 
 * HumModel.slurm - this should run all 25 chunks of the Humidity/Temperature model
 * HumModel_Run.R - this extracts data to a file TempDewpointMatrixN.RData, and runs the model. Requires the file TempMatrixN.RData to be loaded
-* HumModel_Run_Fast.R - this file just contains the model, requires the file TempDewpointMatrixN.RData to be loaded
 
 * RainfallModel.slurm - this should run all 25 chunks of the Rainfall/Humidity/Temperature model
 * RainfallModel_Run.R - this extracts data to a file FullMatrixN.RData, and runs the model. Requires the file TempDewpointMatrixN.RData to be loaded
-* RainfallModel_Run_Fast.R - this file just contains the model, requires the file FullMatrixN.RData to be loaded
 

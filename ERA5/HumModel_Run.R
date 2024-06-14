@@ -1,54 +1,62 @@
 project<-function(i){
   # Load libraries
-  library(sp)
-  library(raster)
   library(Rcpp)
   library(tempsuitcalc)
   
-  # Load existing in progress files
-  load(paste("TempMatrix",i,".RData",sep=""))
+  dataMatrixName = paste("TempDewpointMatrix",i,".RData",sep="")
   
-  file_names <- c("AllData/2022_03.grib",
-                  "AllData/2022_04.grib",
-                  "AllData/2022_05.grib",
-                  "AllData/2022_06.grib",
-                  "AllData/2022_07.grib",
-                  "AllData/2022_08.grib",
-                  "AllData/2022_09.grib",
-                  "AllData/2022_10.grib",
-                  "AllData/2022_11.grib",
-                  "AllData/2022_12.grib",
-                  "AllData/2023_01.grib",
-                  "AllData/2023_02.grib",
-                  "AllData/2023_03.grib",
-                  "AllData/2023_04.grib",
-                  "AllData/2023_05.grib")
+  if (file.exists(dataMatrixName)) {
+    # Load existing in progress files
+    load(dataMatrixName)
+  } else {
+    library(sp)
+    library(raster)
+    
+    # Load existing in progress files
+    load(paste("TempMatrix",i,".RData",sep=""))
+    
+    file_names <- c("AllData/2022_03.grib",
+                    "AllData/2022_04.grib",
+                    "AllData/2022_05.grib",
+                    "AllData/2022_06.grib",
+                    "AllData/2022_07.grib",
+                    "AllData/2022_08.grib",
+                    "AllData/2022_09.grib",
+                    "AllData/2022_10.grib",
+                    "AllData/2022_11.grib",
+                    "AllData/2022_12.grib",
+                    "AllData/2023_01.grib",
+                    "AllData/2023_02.grib",
+                    "AllData/2023_03.grib",
+                    "AllData/2023_04.grib",
+                    "AllData/2023_05.grib")
+    
+    # Extract the cells of this particular chunk
+    valid_cells = na.omit(valid_cells_matrix[i,])
+    rm(valid_cells_matrix)
+    number_of_cells = length(valid_cells)
   
-  # Extract the cells of this particular chunk
-  valid_cells = na.omit(valid_cells_matrix[i,])
-  rm(valid_cells_matrix)
-  number_of_cells = length(valid_cells)
-
-  # Extract temperatures from the data files
-  # Running this direct without a for loop seems to cause memory issues
-  extractDewpointFromGrib = function(fileName) {
-    temp_brick = brick(fileName)
-    number_of_layers = nlayers(temp_brick) / 4
-    return_matrix = matrix(0, number_of_cells, number_of_layers)
-    for (layer in 1:number_of_layers) {
-      print(paste(fileName, toString(layer), sep=" "))
-      # Convert Kelvin data to Celsius
-      return_matrix[,layer] = temp_brick[[4 * layer - 3]][valid_cells] - 273.15
+    # Extract temperatures from the data files
+    # Running this direct without a for loop seems to cause memory issues
+    extractDewpointFromGrib = function(fileName) {
+      temp_brick = brick(fileName)
+      number_of_layers = nlayers(temp_brick) / 4
+      return_matrix = matrix(0, number_of_cells, number_of_layers)
+      for (layer in 1:number_of_layers) {
+        print(paste(fileName, toString(layer), sep=" "))
+        # Convert Kelvin data to Celsius
+        return_matrix[,layer] = temp_brick[[4 * layer - 3]][valid_cells] - 273.15
+      }
+      return(return_matrix)
     }
-    return(return_matrix)
+    dewpoint_matrix = do.call(cbind, lapply(file_names, extractDewpointFromGrib))[,1:5208]
+    temp_dewpoint_matrix = cbind(temp_matrix, dewpoint_matrix)
+    
+    # Save the output, so if the model needs to be re-run extraction doesn't need to be repeated
+    save(valid_cells,
+         temp_dewpoint_matrix,
+         file = dataMatrixName)
   }
-  dewpoint_matrix = do.call(cbind, lapply(file_names, extractDewpointFromGrib))[,1:5208]
-  temp_dewpoint_matrix = cbind(temp_matrix, dewpoint_matrix)
-  
-  # Save the output, so if the model needs to be re-run extraction doesn't need to be repeated
-  save(valid_cells,
-       temp_dewpoint_matrix,
-       file = paste("TempDewpointMatrix",i,".RData",sep=""))
   
   # Define functions for calculating relative humidity
   mag_coeff_exp = function(temp) {
