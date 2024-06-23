@@ -3,7 +3,7 @@ project<-function(i){
   library(Rcpp)
   library(tempsuitcalc)
   
-  dataMatrixName = paste("TempDewpointMatrix",i,".RData",sep="")
+  dataMatrixName = paste("HumData/TempDewpointMatrix",i,".RData",sep="")
   
   if (file.exists(dataMatrixName)) {
     # Load existing in progress files
@@ -13,7 +13,7 @@ project<-function(i){
     library(raster)
     
     # Load existing in progress files
-    load(paste("TempMatrix",i,".RData",sep=""))
+    load(paste("TempData/TempMatrix",i,".RData",sep=""))
     
     file_names <- c("AllData/2022_03.grib",
                     "AllData/2022_04.grib",
@@ -31,9 +31,6 @@ project<-function(i){
                     "AllData/2023_04.grib",
                     "AllData/2023_05.grib")
     
-    # Extract the cells of this particular chunk
-    valid_cells = na.omit(valid_cells_matrix[i,])
-    rm(valid_cells_matrix)
     number_of_cells = length(valid_cells)
   
     # Extract temperatures from the data files
@@ -116,6 +113,6 @@ project<-function(i){
   # Save the output
   nam<-paste("HumOutput",i,sep="")
   assign(x=nam,value=output)
-  filename<-paste(nam,".RData",sep="")
+  filename<-paste("HumOutput/",nam,".RData",sep="")
   save(list=nam, file=filename)
 }

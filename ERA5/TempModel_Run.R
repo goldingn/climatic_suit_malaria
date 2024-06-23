@@ -3,7 +3,7 @@ project<-function(i){
   library(Rcpp)
   library(tempsuitcalc)
   
-  dataMatrixName = paste("TempMatrix",i,".RData",sep="")
+  dataMatrixName = paste("TempData/TempMatrix",i,".RData",sep="")
   
   if (file.exists(dataMatrixName)) {
     # Load existing in progress files
@@ -99,6 +99,6 @@ project<-function(i){
   # Save the output
   nam<-paste("TempOutput",i,sep="")
   assign(x=nam,value=output)
-  filename<-paste(nam,".RData",sep="")
+  filename<-paste("TempOutput/",nam,".RData",sep="")
   save(list=nam, file=filename)
 }

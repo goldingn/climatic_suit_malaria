@@ -10,4 +10,5 @@ tempsuitcalc/src/*.so
 
 # ERA5 data files
 ERA5/*Data/*
+ERA5/*Output/*
 
