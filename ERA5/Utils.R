@@ -22,7 +22,7 @@ plotRasterize = function(model, maxz) {
   library(RColorBrewer)
   # First day of the model is 6th April 2022
   # These days and titles will provide snapshots on the 15th of each month. This can be changed to produce a different set of outputs.
-  days<-c(275, 306, 334, 10, 40, 71, 101, 142, 173, 203, 234, 264)
+  days<-c(285, 316, 344, 10, 40, 71, 101, 132, 163, 193, 224, 254)
   titles=c("January", "February", "March", "April", "May", "June",
            "July", "August", "September", "October", "November", "December")
   mont<-matrix(nrow=length(days),ncol=0)
@@ -70,9 +70,51 @@ plotAggregate = function(model) {
     agg = c(agg, colMeans(temp))
     rm(list=paste(model,i,sep=''))
   }
-  blankRaster = raster('blankNew.gri')
-  blankRaster[valid_cells] = agg
+  outputRaster = raster('blankNew.gri')
+  outputRaster[valid_cells] = agg
   png(filename = paste(model,'Agg.png',sep=''), height=720, width=949)
-  plot(blankRaster,col=palette(100),axes=FALSE)
+  plot(outputRaster,col=palette(100),axes=FALSE)
   dev.off()
+  writeRaster(outputRaster, filename=paste(model,'Agg.grd',sep=''),overwrite=TRUE)
+}
+
+# Take the outputs of a model (TempOutput, HumOutput and RainfallOutput), aggregates the results over the seasons, and produces 4 output images
+# maxz controls the upper limit of the plot. For temp and hum models, this can be set to 2500. Rainfall model should set this to 4000.
+plotSeasonalAverages = function(model,maxz) {
+  library(raster)
+  library(RColorBrewer)
+  
+  agg = matrix(nrow=4,ncol=0)
+  titles=c("Mar - May", "Jun - Aug", "Sep - Nov", "Dec - Feb")
+  load('ValidCells.RData')
+  valid_cells = as.vector(na.omit(as.vector(t(valid_cells_matrix))))
+  rm(valid_cells_matrix)
+  
+  colours=brewer.pal(9,"YlOrRd")[2:9]
+  palette=colorRampPalette(colours)
+  
+  for(i in 1:25) {
+    load(paste(model, '/', model, i,'.RData',sep=''))
+    temp<-get(paste(model,i,sep=''))
+    rm(list=paste(model,i,sep=''))
+    means=rbind(
+      # Spring
+      colMeans(rbind(temp[330:365,], temp[1:56,])),
+      # Summer
+      colMeans(temp[57:148,]),
+      # Autumn
+      colMeans(temp[149:239,]),
+      # Winter
+      colMeans( temp[240:329,])
+    )
+    agg = cbind(agg, means)
+  }
+  for(index in 1:4) {
+    blankRaster = raster('blankNew.gri')
+    blankRaster[valid_cells] = agg[index,]
+    png(filename = paste(model,'Agg',index,'.png',sep=''), height=720, width=949)
+    plot(blankRaster,col=palette(100),axes=FALSE,zlim=c(0,maxz))
+    title(titles[index], cex.main=2.5)
+    dev.off()
+  }
 }
