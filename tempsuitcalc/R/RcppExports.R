@@ -9,11 +9,15 @@ DLStempindexnew <- function(myDD, myP, Zout, Aoutmov) {
     .Call(`_tempsuitcalc_DLStempindexnew`, myDD, myP, Zout, Aoutmov)
 }
 
-rcpp_hello_world <- function() {
-    .Call(`_tempsuitcalc_rcpp_hello_world`)
-}
-
 WaterVolumeSim <- function(temp, dewp, rain, alt, lat, Vout) {
     .Call(`_tempsuitcalc_WaterVolumeSim`, temp, dewp, rain, alt, lat, Vout)
+}
+
+WaterVolumeSimWithEvap <- function(temp, rain, evap, Vout) {
+    .Call(`_tempsuitcalc_WaterVolumeSimWithEvap`, temp, rain, evap, Vout)
+}
+
+rcpp_hello_world <- function() {
+    .Call(`_tempsuitcalc_rcpp_hello_world`)
 }
 
