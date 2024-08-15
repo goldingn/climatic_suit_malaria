@@ -51,6 +51,7 @@ plotRasterize = function(model, maxz) {
 }
 
 # Take the outputs of a model (TempOutput, HumOutput and RainfallOutput), aggregates the results over the 365 days, and produces an output image
+# The output raster is scaled relative to the model's maxValue
 plotAggregate = function(model) {
   library(raster)
   library(RColorBrewer)
@@ -73,7 +74,9 @@ plotAggregate = function(model) {
   outputRaster = raster('blankNew.gri')
   outputRaster[valid_cells] = agg
   png(filename = paste(model,'Agg.png',sep=''), height=720, width=949)
-  plot(outputRaster,col=palette(100),axes=FALSE)
+  zmax = maxValue(outputRaster)
+  outputRaster = outputRaster / zmax
+  plot(outputRaster,col=palette(100),axes=FALSE,zlim=c(0,1))
   dev.off()
   writeRaster(outputRaster, filename=paste(model,'Agg.grd',sep=''),overwrite=TRUE)
 }
